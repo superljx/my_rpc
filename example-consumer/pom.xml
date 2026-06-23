@@ -30,7 +30,7 @@
 
         <dependency>
             <groupId>com.ljx</groupId>
-            <artifactId>my-rpc-easy</artifactId>
+            <artifactId>my-rpc-core</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

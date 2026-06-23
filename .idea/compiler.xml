@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="my-rpc-easy" />
         <module name="example-provider" />
+        <module name="my-rpc-core" />
         <module name="example-consumer" />
         <module name="example-common" />
       </profile>
