@@ -1,8 +1,11 @@
 package com.ljx;
 
 import com.ljx.config.ConfigUtils;
+import com.ljx.config.RegistryConfig;
 import com.ljx.config.RpcConfig;
 import com.ljx.constant.RpcConstant;
+import com.ljx.registry.Registry;
+import com.ljx.registry.RegistryFactory;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -22,6 +25,10 @@ public class RpcApplication {
     private static void init(RpcConfig newRpcConfig) {
         rpcConfig = newRpcConfig;
         log.info("rpc init, config = {}", newRpcConfig.toString());
+        RegistryConfig registryConfig = rpcConfig.getRegistryConfig();
+        Registry registry = RegistryFactory.getInstance(registryConfig.getRegistry());
+        registry.init(registryConfig);
+        log.info("registry init, config = {}", registryConfig);
     }
 
     /**

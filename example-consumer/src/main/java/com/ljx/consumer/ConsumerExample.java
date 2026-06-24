@@ -2,8 +2,6 @@ package com.ljx.consumer;
 
 import com.ljx.common.model.User;
 import com.ljx.common.service.UserService;
-import com.ljx.config.ConfigUtils;
-import com.ljx.config.RpcConfig;
 import com.ljx.proxy.ServiceProxyFactory;
 
 public class ConsumerExample {

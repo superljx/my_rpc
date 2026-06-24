@@ -35,4 +35,9 @@ public class RpcConfig {
     private Integer serverPort = 8080;
 
     private String serializer = SerializerKeys.KRYO;
+
+    /**
+     * 注册中心配置
+     */
+    private RegistryConfig registryConfig = new RegistryConfig();
 }
