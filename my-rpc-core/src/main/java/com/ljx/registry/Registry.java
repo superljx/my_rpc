@@ -51,4 +51,9 @@ public interface Registry {
      * 心跳检测（服务端）
      */
     void heartBeat();
+
+    /**
+     * 监听服务节点（消费端）
+     */
+    void watch(String serviceNodeKey);
 }

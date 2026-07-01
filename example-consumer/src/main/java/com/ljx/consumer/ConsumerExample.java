@@ -17,5 +17,23 @@ public class ConsumerExample {
         }
         short number = userService.getNumber();
         System.out.println(number);
+
+        serviceUser = userService.getUser(user);
+        if (serviceUser != null) {
+            System.out.println(serviceUser.getName());
+        } else {
+            System.out.println("user == null");
+        }
+        number = userService.getNumber();
+        System.out.println(number);
+
+        serviceUser = userService.getUser(user);
+        if (serviceUser != null) {
+            System.out.println(serviceUser.getName());
+        } else {
+            System.out.println("user == null");
+        }
+        number = userService.getNumber();
+        System.out.println(number);
     }
 }

@@ -53,6 +53,10 @@ public class ServiceMetaInfo {
         return String.format("/%s/%s:%s", getServiceKey(), serviceHost, servicePort);
     }
 
+    public static String getServiceKeyFromNodeKey(String serviceNodeKey) {
+        return String.format("%s", serviceNodeKey.split("/")[2]);
+    }
+
     /**
      * 获取完整服务地址
      *

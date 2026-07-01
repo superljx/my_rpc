@@ -10,6 +10,8 @@ import io.etcd.jetcd.*;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
+import io.etcd.jetcd.watch.WatchEvent;
+import io.vertx.core.impl.ConcurrentHashSet;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -29,6 +31,12 @@ public class EtcdRegistry implements Registry {
 
     // 本机已注册的节点 key 集合（用于节点在服务注册中心续期）
     private final Set<String> localRegisterNodeKeySet = new HashSet<>();
+
+    // 服务中心缓存
+    private final RegistryServiceCache registryServiceCache = new RegistryServiceCache();
+
+    // 正在监听的 key 集合
+    private final Set<String> watchingKeySet = new ConcurrentHashSet<>();
 
     // 根节点
     private static final String ETCD_ROOT_PATH = "/rpc";
@@ -73,7 +81,13 @@ public class EtcdRegistry implements Registry {
 
     @Override
     public List<ServiceMetaInfo> serviceDiscovery(String serviceKey) {
-        String searchPrefix = ETCD_ROOT_PATH + serviceKey;
+        // 优先从缓存中获取
+        List<ServiceMetaInfo> cacheedServiceMetaInfoList = registryServiceCache.readCache(serviceKey);
+        if (cacheedServiceMetaInfoList != null) {
+            return cacheedServiceMetaInfoList;
+        }
+
+        String searchPrefix = ETCD_ROOT_PATH + "/" + serviceKey;
 
         // 前缀查询
         GetOption getOption = GetOption.builder().isPrefix(true).build();
@@ -81,10 +95,16 @@ public class EtcdRegistry implements Registry {
             List<KeyValue> keyValues = kvClient.get(ByteSequence.from(searchPrefix, StandardCharsets.UTF_8), getOption)
                     .get().getKvs();
 
-            return keyValues.stream().map(keyValue -> {
+            List<ServiceMetaInfo> serviceMetaInfoList = keyValues.stream().map(keyValue -> {
+                String key = keyValue.getKey().toString(StandardCharsets.UTF_8);
+                watch(key);
                 String value = keyValue.getValue().toString(StandardCharsets.UTF_8);
                 return JSONUtil.toBean(value, ServiceMetaInfo.class);
             }).collect(Collectors.toList());
+
+            // 写入缓存
+            registryServiceCache.writeCache(serviceKey, serviceMetaInfoList);
+            return serviceMetaInfoList;
         } catch (Exception e) {
             throw new RuntimeException("获取服务节点列表失败", e);
         }
@@ -141,5 +161,27 @@ public class EtcdRegistry implements Registry {
         // 支持秒级任务
         CronUtil.setMatchSecond(true);
         CronUtil.start();
+    }
+
+    @Override
+    public void watch(String serviceNodeKey) {
+        Watch watchClient = client.getWatchClient();
+
+        // 之前没有被监听，开启监听
+        boolean newWatch = watchingKeySet.add(serviceNodeKey);
+        if (newWatch) {
+            watchClient.watch(ByteSequence.from(serviceNodeKey, StandardCharsets.UTF_8), watchResponse -> {
+                for (WatchEvent event : watchResponse.getEvents()) {
+                    switch (event.getEventType()) {
+                        case DELETE :
+                            // 清理缓存
+                            registryServiceCache.clearCache(ServiceMetaInfo.getServiceKeyFromNodeKey(serviceNodeKey));
+                        case PUT:
+                        default:
+                            break;
+                    }
+                }
+            });
+        }
     }
 }

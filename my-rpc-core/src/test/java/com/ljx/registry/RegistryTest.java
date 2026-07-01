@@ -50,7 +50,7 @@ public class RegistryTest {
     @Test
     public void unRegister() throws ExecutionException, InterruptedException {
         ServiceMetaInfo serviceMetaInfo = new ServiceMetaInfo();
-        serviceMetaInfo.setServiceName(" myService");
+        serviceMetaInfo.setServiceName("myService");
         serviceMetaInfo.setServiceVersion("1.0");
         serviceMetaInfo.setServiceHost("localhost");
         serviceMetaInfo.setServicePort(1234);
@@ -58,18 +58,22 @@ public class RegistryTest {
     }
 
     @Test
-    public void serviceDiscovery() {
+    public void serviceDiscovery() throws Exception {
         ServiceMetaInfo serviceMetaInfo = new ServiceMetaInfo();
         serviceMetaInfo.setServiceName("myService");
         serviceMetaInfo.setServiceVersion("1.0");
         String serviceKey = serviceMetaInfo.getServiceKey();
+        registry.register(serviceMetaInfo);
         List<ServiceMetaInfo> serviceMetaInfoList = registry.serviceDiscovery(serviceKey);
+        registry.serviceDiscovery(serviceKey);
         Assert.assertNotNull(serviceMetaInfoList);
     }
 
     @Test
     public void heartBeat() throws Exception {
         register();
+
+
         Thread.sleep(60 * 1000L);
     }
 }
