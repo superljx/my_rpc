@@ -28,19 +28,19 @@ public class RegistryTest {
     @Test
     public void register() throws Exception {
         ServiceMetaInfo serviceMetaInfo = new ServiceMetaInfo();
-        serviceMetaInfo.setServiceName("/myService");
+        serviceMetaInfo.setServiceName("myService");
         serviceMetaInfo.setServiceVersion("1.0");
         serviceMetaInfo.setServiceHost("localhost");
         serviceMetaInfo.setServicePort(1234);
         registry.register(serviceMetaInfo);
         serviceMetaInfo = new ServiceMetaInfo();
-        serviceMetaInfo.setServiceName("/myService");
+        serviceMetaInfo.setServiceName("myService");
         serviceMetaInfo.setServiceVersion("1.0");
         serviceMetaInfo.setServiceHost("localhost");
         serviceMetaInfo.setServicePort(1235);
         registry.register(serviceMetaInfo);
         serviceMetaInfo = new ServiceMetaInfo();
-        serviceMetaInfo.setServiceName("/myService");
+        serviceMetaInfo.setServiceName("myService");
         serviceMetaInfo.setServiceVersion("2.0");
         serviceMetaInfo.setServiceHost("localhost");
         serviceMetaInfo.setServicePort(1234);
@@ -50,7 +50,7 @@ public class RegistryTest {
     @Test
     public void unRegister() throws ExecutionException, InterruptedException {
         ServiceMetaInfo serviceMetaInfo = new ServiceMetaInfo();
-        serviceMetaInfo.setServiceName("/myService");
+        serviceMetaInfo.setServiceName(" myService");
         serviceMetaInfo.setServiceVersion("1.0");
         serviceMetaInfo.setServiceHost("localhost");
         serviceMetaInfo.setServicePort(1234);
@@ -65,5 +65,11 @@ public class RegistryTest {
         String serviceKey = serviceMetaInfo.getServiceKey();
         List<ServiceMetaInfo> serviceMetaInfoList = registry.serviceDiscovery(serviceKey);
         Assert.assertNotNull(serviceMetaInfoList);
+    }
+
+    @Test
+    public void heartBeat() throws Exception {
+        register();
+        Thread.sleep(60 * 1000L);
     }
 }
