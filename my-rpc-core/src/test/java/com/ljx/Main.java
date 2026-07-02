@@ -1,57 +1,44 @@
 package com.ljx;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
     public static void main(String[] args) {
-        int[] nums = {96117,80613,72852,-70020,-66572};
-        int k = 9520;
-        System.out.println(maxSubarraySum(nums, k));
-    }
+        List<String> servers = new ArrayList<>();
+        servers.add("A");
+        servers.add("B");
+        servers.add("C");
 
-    static long[] copy(int[] nums) {
-        long[] res = new long[nums.length];
-        for (int i = 0; i < nums.length; i ++) {
-            res[i] = nums[i];
-        }
-        return res;
-    }
+        Map<String, AtomicInteger> connections = new ConcurrentHashMap<>();
 
-    static long maxSubarraySum(int[] nums, int k) {
-        int n = nums.length;
-        long[] back = copy(nums);
+        connections.put("A", new AtomicInteger(2));
+        connections.put("B", new AtomicInteger(1));
+        connections.put("C", new AtomicInteger(0));
 
-        for (int i = 0; i < n; i ++) {
-            back[i] *= k;
-        }
-        for (int i = 1; i < n; i ++) {
-            back[i] += back[i - 1];
-        }
-        long mn = 0;
-        long res = -Long.MAX_VALUE;
-        for (int i = 0; i < n; i ++) {
-            res = Math.max(res, back[i] - mn);
-            mn = Math.min(mn, back[i]);
+        if (servers.isEmpty()) {
+            throw new IllegalStateException("没有可用的服务器");
         }
 
-        back = copy(nums);
-        for (int i = 0; i < n; i ++) {
-            if (back[i] > 0) {
-                back[i] = (int) Math.floor((double) back[i] / k);
-            } else {
-                back[i] = (int) Math.ceil((double) back[i] / k);
+        String selected = null;
+        int minCount = Integer.MAX_VALUE;
+
+        // 普通循环遍历，找出最小连接数（避免使用 Stream 和 Lambda）
+        for (Map.Entry<String, AtomicInteger> entry : connections.entrySet()) {
+            int current = entry.getValue().get();   // 读取当前连接数
+            if (current < minCount) {
+                minCount = current;
+                selected = entry.getKey();
             }
         }
-        for (int i = 1; i < n; i ++) {
-            back[i] += back[i - 1];
-        }
-        mn = 0;
-        long ans = -Long.MAX_VALUE;
-        for (int i = 0; i < n; i ++) {
-            ans = Math.max(ans, back[i] - mn);
-            mn = Math.min(mn, back[i]);
+
+        // 选中后立即增加连接数（原子自增）
+        if (selected != null) {
+            connections.get(selected).incrementAndGet();
         }
 
-        return Math.max(res, ans);
+        System.out.println(selected);
     }
+
 }

@@ -10,6 +10,7 @@ import com.ljx.registry.LocalRegistry;
 import com.ljx.registry.Registry;
 import com.ljx.registry.RegistryFactory;
 import com.ljx.server.VertxHttpServer;
+import com.ljx.server.tcp.VertxTcpServer;
 
 public class ProviderExample {
     public static void main(String[] args) {
@@ -33,7 +34,7 @@ public class ProviderExample {
             throw new RuntimeException(e);
         }
 
-        VertxHttpServer httpServer = new VertxHttpServer();
+        VertxTcpServer httpServer = new VertxTcpServer();
         httpServer.doStart(RpcApplication.getRpcConfig().getServerPort());
     }
 }

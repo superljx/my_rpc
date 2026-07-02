@@ -1,5 +1,6 @@
 package com.ljx.proxy;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.ljx.RpcApplication;
@@ -8,17 +9,24 @@ import com.ljx.constant.RpcConstant;
 import com.ljx.model.RpcRequest;
 import com.ljx.model.RpcResponse;
 import com.ljx.model.ServiceMetaInfo;
+import com.ljx.protocol.*;
 import com.ljx.registry.Registry;
 import com.ljx.registry.RegistryFactory;
 import com.ljx.serializer.JdkSerializer;
 import com.ljx.serializer.Serializer;
 import com.ljx.serializer.SerializerFactory;
+import com.ljx.server.tcp.VertxTcpClient;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.NetClient;
+import io.vertx.core.net.NetSocket;
 
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 服务动态代理（JDK 动态代理实现）
@@ -34,12 +42,14 @@ public class ServiceProxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Serializer serializer = SerializerFactory.getInstance(RpcApplication.getRpcConfig().getSerializer());
 
+        String serviceName = method.getDeclaringClass().getName();
         RpcRequest rpcRequest = RpcRequest.builder()
-                .serviceName(method.getDeclaringClass().getName())
+                .serviceName(serviceName)
                 .methodName(method.getName())
                 .parameterTypes(method.getParameterTypes())
                 .args(args)
                 .build();
+        RpcResponse rpcResponse;
         try {
             byte[] bytes = serializer.serialize(rpcRequest);
             // 发送请求
@@ -58,16 +68,11 @@ public class ServiceProxy implements InvocationHandler {
             // todo 服务节点地址后续可能有多个，现在暂时取第一个
             ServiceMetaInfo metaInfo = serviceMetaInfos.get(0);
 
-            try (HttpResponse post = HttpRequest.post(metaInfo.getServiceAddress()).body(bytes).execute()) {
-                byte[] result = post.bodyBytes();
-                RpcResponse deserialized = serializer.deserialize(result, RpcResponse.class);
-                return deserialized.getData();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // 发送 TCP 请求
+            rpcResponse = VertxTcpClient.doRequest(rpcRequest, metaInfo);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("调用失败");
         }
-        return null;
+        return rpcResponse.getData();
     }
 }
